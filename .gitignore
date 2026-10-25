@@ -15,3 +15,5 @@ captures/
 tools/node_modules/
 out/
 dist/*.apk
+local.properties
+*.log
