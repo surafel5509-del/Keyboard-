@@ -160,6 +160,16 @@
     <string name="privacy_data_title">What is stored on device</string>
     <string name="privacy_data_body">• Settings and theme choices\n• Words you add to the personal dictionary\n• Words learned from your typing (only if learning is enabled)\n• Recently used emoji\n• Clipboard entries you save (only if clipboard history is enabled)</string>
 
+    <!-- Accessibility (canvas-drawn keyboard) -->
+    <string name="a11y_shift">Shift</string>
+    <string name="a11y_caps_lock_on">Caps lock on</string>
+    <string name="a11y_backspace">Delete</string>
+    <string name="a11y_enter">Enter</string>
+    <string name="a11y_space">Space</string>
+    <string name="a11y_symbols">Numbers and symbols</string>
+    <string name="a11y_letters">Letters</string>
+    <string name="a11y_language">Change language</string>
+
     <!-- Common -->
     <string name="on">On</string>
     <string name="off">Off</string>

@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.view.MotionEvent
+import android.view.accessibility.AccessibilityManager
 import android.view.View
 import com.novakeyboard.ui.theme.KeyboardTheme
 import com.novakeyboard.ui.theme.ThemePresets
@@ -150,6 +151,10 @@ class SuggestionStripView(context: Context) : View(context) {
                 pressedIndex = indexAt(event.x, event.y)
                 downTime = System.currentTimeMillis()
                 if (pressedIndex >= 0) {
+                    val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+                    if (manager?.isEnabled == true && manager.isTouchExplorationEnabled) {
+                        items.getOrNull(pressedIndex)?.let { announceForAccessibility(it.label) }
+                    }
                     postDelayed(longPressRunnable, 420)
                     invalidate()
                     return true

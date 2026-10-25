@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.view.MotionEvent
 import android.view.View
+import android.view.accessibility.AccessibilityManager
 import com.novakeyboard.R
 import com.novakeyboard.ui.keyboard.Icons
 import com.novakeyboard.ui.keyboard.KeyIcon
@@ -38,6 +39,8 @@ class ToolbarView(context: Context) : View(context) {
     }
     private val chipPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
+    private val accessibilityManager =
+        context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
     private var theme: KeyboardTheme = ThemePresets.midnight
     private var languageLabel: String = "EN"
     private var activeAction: Action? = null
@@ -154,6 +157,11 @@ class ToolbarView(context: Context) : View(context) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 pressedAction = buttonAt(event.x, event.y)
+                val manager = accessibilityManager
+                if (pressedAction != null && manager?.isEnabled == true && manager.isTouchExplorationEnabled) {
+                    val label = buttons.firstOrNull { it.action == pressedAction }?.label
+                    if (!label.isNullOrEmpty()) announceForAccessibility(label)
+                }
                 invalidate()
                 return pressedAction != null
             }

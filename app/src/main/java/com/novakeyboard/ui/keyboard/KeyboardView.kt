@@ -9,6 +9,7 @@ import android.graphics.Shader
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
+import android.view.accessibility.AccessibilityManager
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -137,10 +138,40 @@ class KeyboardView(context: Context) : View(context) {
         }
     }
 
+    private val accessibilityManager =
+        context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+
     init {
         isClickable = true
         isFocusable = false
         contentDescription = context.getString(com.novakeyboard.R.string.ime_label)
+    }
+
+    /**
+     * Spoken label for TalkBack. The keyboard is drawn on a single Canvas, so
+     * instead of per-key virtual views we announce the key under the finger.
+     */
+    private fun announceKey(key: Key) {
+        val manager = accessibilityManager ?: return
+        if (!manager.isEnabled || !manager.isTouchExplorationEnabled) return
+        val spoken = when (key.type) {
+            KeyType.CHAR -> key.labelFor(uppercase)
+            KeyType.SHIFT -> context.getString(
+                if (shiftState == ShiftState.CAPS) com.novakeyboard.R.string.a11y_caps_lock_on
+                else com.novakeyboard.R.string.a11y_shift,
+            )
+            KeyType.BACKSPACE -> context.getString(com.novakeyboard.R.string.a11y_backspace)
+            KeyType.ENTER -> context.getString(com.novakeyboard.R.string.a11y_enter)
+            KeyType.SPACE -> context.getString(com.novakeyboard.R.string.a11y_space)
+            KeyType.TO_SYMBOLS, KeyType.TO_SYMBOLS_2 -> context.getString(com.novakeyboard.R.string.a11y_symbols)
+            KeyType.TO_LETTERS -> context.getString(com.novakeyboard.R.string.a11y_letters)
+            KeyType.LANGUAGE -> context.getString(com.novakeyboard.R.string.a11y_language)
+            KeyType.EMOJI -> context.getString(com.novakeyboard.R.string.toolbar_emoji)
+            KeyType.CLIPBOARD -> context.getString(com.novakeyboard.R.string.toolbar_clipboard)
+            KeyType.SETTINGS -> context.getString(com.novakeyboard.R.string.toolbar_settings)
+            KeyType.SPACER -> return
+        }
+        announceForAccessibility(spoken)
     }
 
     // ---------------------------------------------------------------- appearance
@@ -383,6 +414,7 @@ class KeyboardView(context: Context) : View(context) {
                 cursorSteps = 0
                 pressedKey = keyAt(event.x, event.y)
                 pressedKey?.let {
+                    announceKey(it.key)
                     listener?.onKeyPressed(it.key)
                     handler.postDelayed(longPressRunnable, LONG_PRESS_DELAY)
                 }
