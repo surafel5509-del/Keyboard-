@@ -62,21 +62,23 @@ data class Key(
 ) {
     val isCharacter: Boolean get() = type == KeyType.CHAR
 
-    fun outputFor(uppercase: Boolean): String {
-        if (!uppercase) return output
-        return shiftedOutput ?: output.uppercase()
+    // Uppercase forms are precomputed once per layout so that drawing a frame
+    // allocates nothing (the keyboard redraws on every press).
+    private val upperOutput: String = shiftedOutput ?: if (output.isEmpty()) output else output.uppercase()
+    private val upperLabel: String = if (label.isEmpty()) label else label.uppercase()
+    private val upperAlternates: List<String> by lazy {
+        if (alternates.isEmpty()) alternates else alternates.map { it.uppercase() }
     }
+
+    fun outputFor(uppercase: Boolean): String = if (uppercase) upperOutput else output
 
     fun labelFor(uppercase: Boolean): String {
-        if (label.isEmpty()) return label
-        if (!isCharacter || !uppercase) return label
-        return label.uppercase()
+        if (!uppercase || !isCharacter) return label
+        return upperLabel
     }
 
-    fun alternatesFor(uppercase: Boolean): List<String> {
-        if (alternates.isEmpty()) return emptyList()
-        return if (uppercase) alternates.map { it.uppercase() } else alternates
-    }
+    fun alternatesFor(uppercase: Boolean): List<String> =
+        if (uppercase) upperAlternates else alternates
 
     companion object {
         fun char(value: String, alternates: List<String> = emptyList(), topLabel: String? = null): Key =
