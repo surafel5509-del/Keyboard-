@@ -10,7 +10,7 @@ implemented” is genuinely absent.
 | --- | --- |
 | Kotlin sources compile | **Executed** — `kotlinc` 2.x over all 40 files with a generated `R.java`, exit 0 (locally) and `:app:assembleDebug` on CI, success. |
 | Unit tests | **Executed** — 214 checks locally on a plain JVM; 9 JUnit tests on CI (`:app:testDebugUnitTest`), 0 failures. |
-| Debug + release APK built | **Executed** — on GitHub Actions (1,408,148 B debug, 433,451 B release) and locally with `tools/build_local.sh` (1,290,658 B). |
+| Debug + release APK built | **Executed** — on GitHub Actions (1,410,448 B debug, 434,959 B release) and locally with `tools/build_local.sh` (1,293,346 B). |
 | APK signature verified | **Executed** — `tools/verify_apk.js` (independent v2 verifier, itself cross-checked against a real `apksigner` APK) on both the local and the CI APKs; the verifier also ran as a CI step. |
 | Manifest audited | **Executed** — `aapt2 dump badging` shows `provides-component:'ime'`, `aapt2 dump permissions` shows no permissions; CI fails on any permission. |
 | **Installed and typed on a real device or emulator** | **NOT executed.** The development environment has no `adb`, no emulator and no Android SDK manager. Behaviour that only appears on a device (IME enable flow, insets, haptics, OEM quirks) is therefore *designed* and *structurally verified*, not observed. |

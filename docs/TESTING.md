@@ -42,7 +42,7 @@ individually:
 ```
 
 The task sets `-Dnova.assets=<app>/src/main/assets`, which is how the tests find
-the bundled dictionary/bigram/emoji files. CI result (run 40172902985,
+the bundled dictionary/bigram/emoji files. CI result (latest run at the time of writing,
 `:app:testDebugUnitTest`): **9 tests, 0 failures, 0 errors, 0 skipped**
 (also visible as a `Unit tests` annotation on the check run).
 
