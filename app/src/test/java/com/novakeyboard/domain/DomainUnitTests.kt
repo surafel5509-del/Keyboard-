@@ -22,30 +22,33 @@ class DomainUnitTests {
         }
     }
 
+    // Lambdas (not method references) so the scenarios stay bound to the
+    // top-level functions in DomainTestSuite.kt instead of recursing into the
+    // test methods below.
     @Test
-    fun shiftAndCapsLock() = scenario("shift and caps lock", ::shiftAndCaps)
+    fun testShiftAndCapsLock() = scenario("shift and caps lock") { shiftAndCaps() }
 
     @Test
-    fun insertionAndBackspace() = scenario("insertion and backspace", ::insertionAndBackspace)
+    fun testInsertionAndBackspace() = scenario("insertion and backspace") { insertionAndBackspace() }
 
     @Test
-    fun suggestionsAndRanking() = scenario("suggestions and ranking", ::suggestionsAndRanking)
+    fun testSuggestionsAndRanking() = scenario("suggestions and ranking") { suggestionsAndRanking() }
 
     @Test
-    fun autoCorrect() = scenario("autocorrect", ::autoCorrect)
+    fun testAutoCorrect() = scenario("autocorrect") { autoCorrect() }
 
     @Test
-    fun preferences() = scenario("preferences", ::preferences)
+    fun testPreferences() = scenario("preferences") { preferences() }
 
     @Test
-    fun languageSwitchingAndGeez() = scenario("language switching and Geez input", ::languagesAndGeez)
+    fun testLanguageSwitchingAndGeez() = scenario("language switching and Geez input") { languagesAndGeez() }
 
     @Test
-    fun clipboardLimits() = scenario("clipboard limits and capture policy", ::clipboardLimits)
+    fun testClipboardLimits() = scenario("clipboard limits and capture policy") { clipboardLimits() }
 
     @Test
-    fun sensitiveFields() = scenario("sensitive fields", ::sensitiveFields)
+    fun testSensitiveFields() = scenario("sensitive fields") { sensitiveFields() }
 
     @Test
-    fun emojiIndex() = scenario("emoji index", ::emojiIndex)
+    fun testEmojiIndex() = scenario("emoji index") { emojiIndex() }
 }
