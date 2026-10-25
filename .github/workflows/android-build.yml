@@ -1,0 +1,129 @@
+name: Build APK
+
+# Builds NOVA KEYBOARD on GitHub's Android runners:
+#   1. unit tests (plain JVM, bundled assets)
+#   2. debug APK + minified release APK
+#   3. manifest audit: the APK must declare ZERO permissions
+#   4. published artifacts (and a rolling "latest-build" release for easy download)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx3g"
+  ANDROID_COMPILE_SDK: "35"
+  ANDROID_BUILD_TOOLS: "35.0.0"
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+          cache-read-only: false
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install platform and build tools
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install "platforms;android-${ANDROID_COMPILE_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" "platform-tools"
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          ls "${ANDROID_HOME}/platforms"
+
+      - name: Unit tests (dictionary, suggestions, autocorrect, Geez, clipboard, privacy)
+        run: gradle --no-daemon :app:testDebugUnitTest --stacktrace
+
+      - name: Build debug APK
+        run: gradle --no-daemon :app:assembleDebug --stacktrace
+
+      - name: Build minified release APK
+        run: gradle --no-daemon :app:assembleRelease --stacktrace
+
+      - name: Collect APKs
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/debug/app-debug.apk out/nova-keyboard-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk out/nova-keyboard-release.apk
+          cd out
+          sha256sum *.apk | tee SHA256SUMS.txt
+          ls -lh
+
+      - name: Audit the merged manifest (no permissions, IME present)
+        run: |
+          AAPT="${ANDROID_HOME}/build-tools/${ANDROID_BUILD_TOOLS}/aapt2"
+          APK=out/nova-keyboard-debug.apk
+          echo "--- badging ---"
+          "${AAPT}" dump badging "${APK}" | head -n 20
+          echo "--- permissions ---"
+          PERMS=$("${AAPT}" dump permissions "${APK}" | grep -o 'android\.permission\.[A-Z_]*' | sort -u || true)
+          if [ -n "${PERMS}" ]; then
+            echo "::error::Unexpected permissions in the merged manifest: ${PERMS}"
+            exit 1
+          fi
+          echo "OK: the APK declares no permissions at all (no INTERNET, no contacts, no microphone)."
+          echo "--- input method ---"
+          "${AAPT}" dump xmltree --file res/xml/method.xml "${APK}" | head -n 30
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-keyboard-apk
+          path: out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Publish downloadable build
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-build
+          name: "NOVA KEYBOARD — latest build"
+          prerelease: true
+          overwrite_files: true
+          body: |
+            Automatically built from `${{ github.sha }}` on branch `${{ github.ref_name }}`.
+
+            * `nova-keyboard-debug.apk` — debug build, installable with `adb install`
+            * `nova-keyboard-release.apk` — minified R8 build (signed with the debug key so it installs out of the box)
+            * `SHA256SUMS.txt` — checksums
+
+            The APK declares no permissions and has no network code. See `docs/PRIVACY.md`.
+          files: |
+            out/nova-keyboard-debug.apk
+            out/nova-keyboard-release.apk
+            out/SHA256SUMS.txt

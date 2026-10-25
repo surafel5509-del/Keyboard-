@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NOVA KEYBOARD</string>
+    <string name="ime_label">NOVA KEYBOARD</string>
+    <string name="ime_name">NOVA KEYBOARD</string>
+    <string name="subtype_en">English (NOVA KEYBOARD)</string>
+    <string name="subtype_am">አማርኛ (NOVA KEYBOARD)</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="privacy_title">Privacy</string>
+
+    <!-- Toolbar / accessibility -->
+    <string name="toolbar_emoji">Emoji</string>
+    <string name="toolbar_clipboard">Clipboard</string>
+    <string name="toolbar_theme">Theme</string>
+    <string name="toolbar_language">Switch language</string>
+    <string name="toolbar_settings">Keyboard settings</string>
+    <string name="toolbar_hide">Hide keyboard</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_shift_on">Shift on</string>
+    <string name="key_caps_lock">Caps lock</string>
+    <string name="key_backspace">Backspace</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_space">Space</string>
+    <string name="key_symbols">Numbers and symbols</string>
+    <string name="key_letters">Letters</string>
+    <string name="key_language">Language</string>
+    <string name="key_emoji">Emoji</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Welcome to NOVA KEYBOARD</string>
+    <string name="setup_tagline">NOVA KEYBOARD · offline · private</string>
+    <string name="setup_subtitle">A fast, private, offline keyboard. No account, no tracking, no internet permission.</string>
+    <string name="setup_step_enable_title">1. Enable the keyboard</string>
+    <string name="setup_step_enable_body">Turn on “NOVA KEYBOARD” in Android\'s keyboard settings.</string>
+    <string name="setup_step_select_title">2. Select the keyboard</string>
+    <string name="setup_step_select_body">Choose “NOVA KEYBOARD” as your current input method.</string>
+    <string name="setup_step_try_title">3. Try it out</string>
+    <string name="setup_step_try_body">Type here to test the keyboard. Nothing you type leaves this device.</string>
+    <string name="setup_open_ime_settings">Open keyboard settings</string>
+    <string name="setup_select_keyboard">Select keyboard</string>
+    <string name="setup_enabled">Enabled</string>
+    <string name="setup_not_enabled">Not enabled</string>
+    <string name="setup_selected">Active</string>
+    <string name="setup_not_selected">Not active</string>
+    <string name="setup_customize">Customize keyboard</string>
+    <string name="setup_privacy">Privacy &amp; permissions</string>
+    <string name="setup_test_hint">Try the keyboard here…</string>
+    <string name="setup_offline_note">Works fully offline: airplane mode, no SIM, no Wi-Fi — everything still works.</string>
+
+    <!-- Settings -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_typing">Typing</string>
+    <string name="settings_languages">Languages</string>
+    <string name="settings_privacy">Privacy &amp; clipboard</string>
+    <string name="settings_dictionary">Personal dictionary</string>
+    <string name="settings_about">About</string>
+    <string name="settings_theme_preset">Theme preset</string>
+    <string name="settings_key_color">Key colour</string>
+    <string name="settings_background_color">Keyboard background</string>
+    <string name="settings_text_color">Key label colour</string>
+    <string name="settings_accent_color">Accent colour</string>
+    <string name="settings_key_radius">Key corner radius</string>
+    <string name="settings_key_height">Key height</string>
+    <string name="settings_key_gap">Key spacing</string>
+    <string name="settings_opacity">Background opacity</string>
+    <string name="settings_borders">Show key borders</string>
+    <string name="settings_number_row">Show number row</string>
+    <string name="settings_suggestions">Show suggestion strip</string>
+    <string name="settings_toolbar">Show toolbar</string>
+    <string name="settings_sound">Keypress sound</string>
+    <string name="settings_sound_volume">Sound volume</string>
+    <string name="settings_haptics">Haptic feedback</string>
+    <string name="settings_autocap">Auto-capitalise sentences</string>
+    <string name="settings_autocorrect">Autocorrect</string>
+    <string name="settings_prediction">Next-word prediction</string>
+    <string name="settings_longpress">Long-press alternate characters</string>
+    <string name="settings_space_cursor">Swipe spacebar to move cursor</string>
+    <string name="settings_learning">Learn new words from my typing</string>
+    <string name="settings_emoji_suggestions">Emoji suggestions</string>
+    <string name="settings_clipboard">Clipboard history</string>
+    <string name="settings_clipboard_capture">Save copied text while keyboard is active</string>
+    <string name="settings_clipboard_max">Maximum clipboard entries</string>
+    <string name="settings_clear_clipboard">Clear clipboard history</string>
+    <string name="settings_clear_learned">Clear learned words</string>
+    <string name="settings_learned_count">%1$d words learned</string>
+    <string name="settings_add_word">Add word</string>
+    <string name="settings_add_word_hint">New word</string>
+    <string name="settings_remove_word">Remove</string>
+    <string name="settings_restore_defaults">Restore defaults</string>
+    <string name="settings_restore_confirm">Reset every appearance and typing setting to its default value?</string>
+    <string name="settings_clear_learned_confirm">Delete all words learned from your typing?</string>
+    <string name="settings_clear_clipboard_confirm">Delete all saved clipboard entries?</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_open_privacy">Read the privacy policy</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_am">አማርኛ (Amharic)</string>
+    <string name="settings_am_mode">Amharic input method</string>
+    <string name="settings_am_mode_translit">Phonetic (typing latin)</string>
+    <string name="settings_am_mode_geez">Geez layout (tapping ሀ ለ ...)</string>
+    <string name="settings_am_dictionary_note">Amharic ships with a Geez input engine and a full Geez layout, but without a bundled Amharic word-frequency dictionary, so Amharic word suggestions are not offered yet.</string>
+    <string name="settings_language_hint">At least one language must stay enabled.</string>
+    <string name="settings_no_amharic">Enable Amharic to choose its input method.</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="reset">Reset</string>
+
+    <!-- Emoji -->
+    <string name="emoji_title">Emoji</string>
+    <string name="emoji_search">Search emoji</string>
+    <string name="emoji_search_hint">Type to search emoji</string>
+    <string name="emoji_no_results">No emoji found</string>
+    <string name="emoji_recent">Recently used</string>
+    <string name="emoji_smileys">Smileys &amp; emotion</string>
+    <string name="emoji_people">People &amp; gestures</string>
+    <string name="emoji_animals">Animals &amp; nature</string>
+    <string name="emoji_food">Food &amp; drink</string>
+    <string name="emoji_activities">Activities &amp; sports</string>
+    <string name="emoji_travel">Travel &amp; places</string>
+    <string name="emoji_objects">Objects</string>
+    <string name="emoji_symbols">Symbols</string>
+    <string name="emoji_flags">Flags</string>
+    <string name="emoji_back">Back to keyboard</string>
+    <string name="emoji_clear_search">Clear search</string>
+
+    <!-- Clipboard -->
+    <string name="clipboard_title">Clipboard</string>
+    <string name="clipboard_empty">No saved clips yet. Copy text in any app, then tap “Save current clipboard”.</string>
+    <string name="clipboard_save_current">Save current clipboard</string>
+    <string name="clipboard_unavailable">Android does not allow reading the clipboard right now.</string>
+    <string name="clipboard_saved">Clipboard saved</string>
+    <string name="clipboard_pin">Pin</string>
+    <string name="clipboard_unpin">Unpin</string>
+    <string name="clipboard_delete">Delete</string>
+    <string name="clipboard_clear">Clear all</string>
+    <string name="clipboard_disabled">Clipboard history is turned off in settings.</string>
+    <string name="clipboard_pinned">Pinned</string>
+    <string name="clipboard_back">Back to keyboard</string>
+
+    <!-- Suggestions -->
+    <string name="undo_autocorrect">Undo</string>
+    <string name="suggestion_add_word">Add “%1$s” to dictionary</string>
+    <string name="suggestion_remove_word">Remove “%1$s” from dictionary</string>
+    <string name="suggestion_added">Added “%1$s”</string>
+
+    <!-- Privacy page -->
+    <string name="privacy_intro">NOVA KEYBOARD is designed so that your typing never leaves your device.</string>
+    <string name="privacy_no_internet_title">No internet access</string>
+    <string name="privacy_no_internet_body">The app does not request the INTERNET permission. Android therefore blocks every network call, even in third-party code.</string>
+    <string name="privacy_local_title">Everything stays local</string>
+    <string name="privacy_local_body">Dictionaries, the next-word model, emoji data and settings are bundled in the app or stored in this app\'s private storage. Nothing is uploaded and no account is required.</string>
+    <string name="privacy_fields_title">Sensitive fields are protected</string>
+    <string name="privacy_fields_body">In password, PIN and other sensitive fields the keyboard turns off learning, personalised suggestions, autocorrect and clipboard capture.</string>
+    <string name="privacy_clipboard_title">Clipboard is opt-in</string>
+    <string name="privacy_clipboard_body">Clipboard history is off by default. When you enable it, only clips you explicitly save (or, if you opt in, text copied while the keyboard is active) are stored locally, and you can pin, delete or clear them at any time.</string>
+    <string name="privacy_backup_title">No cloud backup of learned data</string>
+    <string name="privacy_backup_body">Android backup is disabled for the app, so learned words and clipboard entries are never copied to a cloud backup.</string>
+    <string name="privacy_permissions_title">Permissions</string>
+    <string name="privacy_permissions_body">The app declares no permissions: no internet, no contacts, no SMS, no microphone, no location, no accessibility service.</string>
+    <string name="privacy_data_title">What is stored on device</string>
+    <string name="privacy_data_body">• Settings and theme choices\n• Words you add to the personal dictionary\n• Words learned from your typing (only if learning is enabled)\n• Recently used emoji\n• Clipboard entries you save (only if clipboard history is enabled)</string>
+
+    <!-- Common -->
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="done">Done</string>
+</resources>
