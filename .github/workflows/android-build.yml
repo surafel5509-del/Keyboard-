@@ -1,0 +1,224 @@
+name: Build APK
+
+# Builds NOVA KEYBOARD on GitHub's Android runners:
+#   1. unit tests (plain JVM, bundled assets)
+#   2. debug APK + minified release APK
+#   3. merged-manifest audit: the APK must declare ZERO permissions
+#   4. published artifacts (plus a rolling "latest-build" release for download)
+#
+# Every important fact (test counts, APK size, sha256, permission audit) is also
+# emitted as a workflow annotation so it is visible from the run summary and the
+# checks API without downloading the artifacts.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  checks: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx3g"
+  COMPILE_SDK: "35"
+  BUILD_TOOLS: "35.0.0"
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Locate the Android SDK (preinstalled on the runner)
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=${SDK}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${SDK}" >> "$GITHUB_ENV"
+          echo "Using SDK: ${SDK}"
+          ls "${SDK}" || true
+          echo "platforms:"; ls "${SDK}/platforms" || true
+          echo "build-tools:"; ls "${SDK}/build-tools" || true
+
+      - name: Install the required platform and build tools
+        run: |
+          set +e
+          SDK="${ANDROID_HOME}"
+          SDKMGR=""
+          for candidate in \
+            "${SDK}/cmdline-tools/latest/bin/sdkmanager" \
+            "${SDK}/cmdline-tools/bin/sdkmanager" \
+            "${SDK}/tools/bin/sdkmanager"; do
+            if [ -x "${candidate}" ]; then SDKMGR="${candidate}"; break; fi
+          done
+          echo "sdkmanager: ${SDKMGR:-not found}"
+          if [ -n "${SDKMGR}" ]; then
+            yes 2>/dev/null | "${SDKMGR}" --licenses > /dev/null 2>&1
+            "${SDKMGR}" --install "platforms;android-${COMPILE_SDK}" "build-tools;${BUILD_TOOLS}" "platform-tools" || true
+          fi
+          set -e
+          echo "platforms:"; ls "${SDK}/platforms" || true
+          echo "build-tools:"; ls "${SDK}/build-tools" || true
+          test -f "${SDK}/platforms/android-${COMPILE_SDK}/android.jar" || {
+            echo "::error::Android platform ${COMPILE_SDK} is not installed on the runner"
+            exit 1
+          }
+          test -x "${SDK}/build-tools/${BUILD_TOOLS}/aapt2" || {
+            echo "::error::Android build-tools ${BUILD_TOOLS} are not installed on the runner"
+            exit 1
+          }
+          mkdir -p local.properties.d
+          echo "sdk.dir=${SDK}" > local.properties
+
+      - name: Unit tests (dictionary, suggestions, autocorrect, Geez, clipboard, privacy)
+        run: |
+          set -o pipefail
+          if ! ./gradlew --no-daemon :app:testDebugUnitTest --stacktrace 2>&1 | tee test.log; then
+            bash tools/ci_annotate.sh test.log app/build/test-results/testDebugUnitTest
+            exit 1
+          fi
+
+      - name: Build debug APK
+        run: |
+          set -o pipefail
+          if ! ./gradlew --no-daemon :app:assembleDebug --stacktrace 2>&1 | tee assemble-debug.log; then
+            bash tools/ci_annotate.sh assemble-debug.log
+            exit 1
+          fi
+
+      - name: Build minified release APK
+        run: |
+          set -o pipefail
+          if ! ./gradlew --no-daemon :app:assembleRelease --stacktrace 2>&1 | tee assemble-release.log; then
+            bash tools/ci_annotate.sh assemble-release.log
+            exit 1
+          fi
+
+      - name: Collect APKs and checksums
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/debug/app-debug.apk out/nova-keyboard-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk out/nova-keyboard-release.apk
+          cd out
+          sha256sum *.apk | tee SHA256SUMS.txt
+          ls -lh
+          DEBUG_SIZE=$(stat -c%s nova-keyboard-debug.apk)
+          DEBUG_SHA=$(sha256sum nova-keyboard-debug.apk | cut -d' ' -f1)
+          RELEASE_SIZE=$(stat -c%s nova-keyboard-release.apk)
+          echo "::notice title=Debug APK::nova-keyboard-debug.apk ${DEBUG_SIZE} bytes sha256 ${DEBUG_SHA}"
+          echo "::notice title=Release APK::nova-keyboard-release.apk ${RELEASE_SIZE} bytes"
+
+      - name: Verify the APK signature (APK Signature Scheme v2)
+        run: |
+          node tools/verify_apk.js out/nova-keyboard-debug.apk
+          node tools/verify_apk.js out/nova-keyboard-release.apk
+
+      - name: Audit the merged manifest (no permissions, IME present)
+        run: |
+          AAPT="${ANDROID_HOME}/build-tools/${BUILD_TOOLS}/aapt2"
+          APK=out/nova-keyboard-debug.apk
+          echo "--- badging ---"
+          "${AAPT}" dump badging "${APK}" | head -n 25
+          echo "--- permissions ---"
+          PERMS=$("${AAPT}" dump permissions "${APK}" | grep -o 'android\.permission\.[A-Z_]*' | sort -u || true)
+          if [ -n "${PERMS}" ]; then
+            echo "::error title=Permissions::Unexpected permissions in the merged manifest: ${PERMS}"
+            exit 1
+          fi
+          echo "--- input method ---"
+          "${AAPT}" dump xmltree --file res/xml/method.xml "${APK}" | head -n 40
+          SERVICES=$("${AAPT}" dump xmltree --file AndroidManifest.xml "${APK}" | grep -c 'NovaInputMethodService' || true)
+          if [ "${SERVICES}" -lt 1 ]; then
+            echo "::error title=Manifest::The IME service is missing from the merged manifest"
+            exit 1
+          fi
+          echo "::notice title=Permission audit::PASS — the APK declares no permissions (no INTERNET) and contains NovaInputMethodService"
+
+      - name: Summarise test results
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          tests = failures = errors = skipped = 0
+          for path in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              root = ET.parse(path).getroot()
+              tests += int(root.get("tests", 0))
+              failures += int(root.get("failures", 0))
+              errors += int(root.get("errors", 0))
+              skipped += int(root.get("skipped", 0))
+          print(f"unit tests: {tests}, failures: {failures}, errors: {errors}, skipped: {skipped}")
+          if tests:
+              print(f"::notice title=Unit tests::{tests} tests, {failures} failures, {errors} errors, {skipped} skipped")
+          else:
+              print("::warning title=Unit tests::No test results were produced")
+          PY
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-keyboard-apk
+          path: out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            *.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Publish downloadable build
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-build
+          name: "NOVA KEYBOARD — latest build"
+          prerelease: true
+          overwrite_files: true
+          body: |
+            Automatically built from `${{ github.sha }}` on `${{ github.ref_name }}`.
+
+            * `nova-keyboard-debug.apk` — debug build, installable with `adb install`
+            * `nova-keyboard-release.apk` — minified R8 build
+              (signed with the debug key so it installs out of the box)
+            * `SHA256SUMS.txt` — checksums
+
+            The APK declares no permissions and contains no network code.
+            See `docs/PRIVACY.md`.
+          files: |
+            out/nova-keyboard-debug.apk
+            out/nova-keyboard-release.apk
+            out/SHA256SUMS.txt

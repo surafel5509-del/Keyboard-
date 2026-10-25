@@ -1,0 +1,22 @@
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+*.jks
+# The committed throw-away debug key is intentional (see tools/keystore/README.md)
+!tools/keystore/nova-debug.jks
+!tools/keystore/README.md
+tools/node_modules
+
+# Build outputs and local tooling
+tools/node_modules/
+out/
+dist/*.apk
+local.properties
+*.log
