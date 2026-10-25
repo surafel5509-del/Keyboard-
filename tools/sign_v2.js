@@ -39,8 +39,17 @@ function findEocd(buf) {
   throw new Error('EOCD not found');
 }
 
-function computeContentDigest(entries, centralDir, eocd, algorithm) {
-  const sections = [entries, centralDir, eocd];
+/**
+ * Chunked digest of the three signed APK sections (entries, central directory,
+ * EOCD), computed exactly as `ApkSigningBlockUtils.computeContentDigestsPer1MbChunk`
+ * does in AOSP: every section is split into 1 MB chunks, each chunk is hashed as
+ * 0xa5 || uint32(chunk length) || chunk, and one final hash covers
+ * 0x5a || uint32(total chunk count) || all chunk hashes.
+ *
+ * `eocd` must already have its "start of central directory" field pointing at
+ * the APK Signing Block, which is what the platform verifier assumes.
+ */
+function computeContentDigest(sections, algorithm) {
   const hashes = [];
   for (const section of sections) {
     for (let off = 0; off < section.length; off += CHUNK) {
@@ -89,20 +98,26 @@ async function main() {
   const entries = apk.subarray(0, cdOffset);
   const centralDir = apk.subarray(cdOffset, eocdOffset);
   const eocd = Buffer.from(apk.subarray(eocdOffset));
-  // For the digest, the central directory offset must point at the start of the
-  // APK Signing Block, which is exactly where the central directory used to be.
+  // For the digest the "start of central directory" field is normalised to the
+  // offset of the APK Signing Block, which is where the central directory used
+  // to start (same normalisation the platform verifier performs).
   eocd.writeUInt32LE(cdOffset, 16);
 
-  const digest = computeContentDigest(entries, centralDir, eocd, 'sha256');
+  const digest = computeContentDigest([entries, centralDir, eocd], 'sha256');
 
-  const digestRecord = Buffer.concat([u32(ALG_RSA_PKCS1_SHA256), digest]);
+  // v2 layout (see ApkSignatureSchemeV2Verifier in AOSP):
+  //   digests      = LP( LP( uint32 algorithm + LP(digest) ) )
+  //   certificates = LP( LP(certificate DER) )
+  //   signatures   = LP( LP( uint32 algorithm + LP(signature) ) )
+  //   publicKey    = LP(SubjectPublicKeyInfo DER)
+  const digestRecord = Buffer.concat([u32(ALG_RSA_PKCS1_SHA256), lp(digest)]);
   const digestsField = lp(lp(digestRecord));
   const certsField = lp(lp(certDer));
   const attrsField = lp(Buffer.alloc(0));
   const signedData = Buffer.concat([digestsField, certsField, attrsField]);
 
   const signature = crypto.sign('sha256', signedData, keyObject);
-  const sigRecord = Buffer.concat([u32(ALG_RSA_PKCS1_SHA256), signature]);
+  const sigRecord = Buffer.concat([u32(ALG_RSA_PKCS1_SHA256), lp(signature)]);
   const signaturesField = lp(lp(sigRecord));
   const publicKeyField = lp(publicKeyDer);
 

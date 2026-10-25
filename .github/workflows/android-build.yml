@@ -93,19 +93,26 @@ jobs:
       - name: Unit tests (dictionary, suggestions, autocorrect, Geez, clipboard, privacy)
         run: |
           set -o pipefail
-          ./gradlew --no-daemon :app:testDebugUnitTest --stacktrace 2>&1 | tee test.log
-        # On failure surface the interesting lines as annotations.
-        continue-on-error: false
+          if ! ./gradlew --no-daemon :app:testDebugUnitTest --stacktrace 2>&1 | tee test.log; then
+            bash tools/ci_annotate.sh test.log app/build/test-results/testDebugUnitTest
+            exit 1
+          fi
 
       - name: Build debug APK
         run: |
           set -o pipefail
-          ./gradlew --no-daemon :app:assembleDebug --stacktrace 2>&1 | tee assemble-debug.log
+          if ! ./gradlew --no-daemon :app:assembleDebug --stacktrace 2>&1 | tee assemble-debug.log; then
+            bash tools/ci_annotate.sh assemble-debug.log
+            exit 1
+          fi
 
       - name: Build minified release APK
         run: |
           set -o pipefail
-          ./gradlew --no-daemon :app:assembleRelease --stacktrace 2>&1 | tee assemble-release.log
+          if ! ./gradlew --no-daemon :app:assembleRelease --stacktrace 2>&1 | tee assemble-release.log; then
+            bash tools/ci_annotate.sh assemble-release.log
+            exit 1
+          fi
 
       - name: Collect APKs and checksums
         run: |
@@ -120,6 +127,11 @@ jobs:
           RELEASE_SIZE=$(stat -c%s nova-keyboard-release.apk)
           echo "::notice title=Debug APK::nova-keyboard-debug.apk ${DEBUG_SIZE} bytes sha256 ${DEBUG_SHA}"
           echo "::notice title=Release APK::nova-keyboard-release.apk ${RELEASE_SIZE} bytes"
+
+      - name: Verify the APK signature (APK Signature Scheme v2)
+        run: |
+          node tools/verify_apk.js out/nova-keyboard-debug.apk
+          node tools/verify_apk.js out/nova-keyboard-release.apk
 
       - name: Audit the merged manifest (no permissions, IME present)
         run: |
